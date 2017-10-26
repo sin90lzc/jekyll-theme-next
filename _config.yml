@@ -18,8 +18,6 @@ url: https://sin90lzc.github.com
 baseurl:
 permalink: pretty
 
-keep-files: /posts/photo
-
 # Pagination
 paginate: 10
 #paginate_path: "/page:num/"
@@ -241,7 +239,6 @@ font:
 social:
   GitHub: https://github.com/sin90lzc
 
-
 # Social Links Icons
 # Icon Mapping:
 #   Map a menu item to a specific FontAwesome icon name.
@@ -372,7 +369,6 @@ post_copyright:
 custom_logo:
   enabled: true
   image: 
-
 
 # Code Highlight theme
 # Available value:
