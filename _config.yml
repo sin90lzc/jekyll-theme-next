@@ -4,19 +4,21 @@
 # ---------------------------------------------------------------
 
 # Site
-title: NexT
-subtitle:
-description:
-author: John Doe
+title: 开浪裤的博客
+subtitle: 简单才有效，顺势才快捷
+description: 人生得意需尽欢，莫使金樽空对月；天生我才必有用，千金散尽还复来
+author: 开浪裤
 # Support language: de, en, fr-FR, id, ja, ko, pt-BR, pt, ru, zh-Hans, zh-hk, zh-tw
-language: en
+language: zh-Hans
 date_format: '%Y-%m-%d'
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com' and baseurl as '/child'
-url:
+url: https://sin90lzc.github.com
 baseurl:
 permalink: pretty
+
+keep-files: /posts/photo
 
 # Pagination
 paginate: 10
@@ -47,6 +49,11 @@ markdown: kramdown
 kramdown:
     input: GFM
 
+
+#collections:
+#    posts:
+#        output: true
+
 # Default Attributes
 ## Docs: https://jekyllrb.com/docs/configuration/#front-matter-defaults
 defaults:
@@ -57,6 +64,25 @@ defaults:
     values:
       layout: "post"
       comments: true
+  -
+    scope:
+      path: "_posts/life"
+    values:
+      category: "生活"
+  -
+    scope:
+      path: "_posts/life/2017-10-25-可爱天使.md"
+    values:
+      title: "可爱天使"
+      date: "2017-10-26"
+      tag: "宝贝"
+
+
+
+
+
+
+
 
 # Atom feed
 feed:
@@ -67,7 +93,7 @@ feed:
 plugins:
 # jemoji conficts with toc in some no-ascii post
 # - jemoji
- - jekyll-sitemap
+# - jekyll-sitemap
  - jekyll-feed
 
 # ---------------------------------------------------------------
@@ -78,7 +104,7 @@ plugins:
 favicon: /assets/favicon.ico
 
 # Set default keywords (Use a comma to separate)
-keywords: "Jekyll, NexT"
+keywords: "开浪裤"
 
 # Set rss to false to disable feed link.
 # Leave rss as empty to use site's feed link.
@@ -86,7 +112,7 @@ keywords: "Jekyll, NexT"
 rss:
 
 # Specify the date when the site was setup
-#since: 2015
+since: 2017
 
 # icon between year and author @Footer
 authoricon: heart
@@ -104,7 +130,7 @@ copyright: true
 canonical: true
 
 # Change headers hierarchy on site-subtitle (will be main site description) and on all post/pages titles for better SEO-optimization.
-seo: false
+seo: true
 
 # If true, will add site-subtitle to index page, added in jekyll config.
 # subtitle: Subtitle
@@ -117,8 +143,8 @@ index_with_subtitle: false
 # When running the site in a subdirectory (e.g. domain.tld/blog), remove the leading slash (/archives -> archives)
 menu:
   home: /
-  #categories: /categories/
-  #about: /about/
+  categories: /categories/
+  about: /about/
   archives: /archives/
   tags: /tags/
   #sitemap: /sitemap.xml
@@ -164,7 +190,7 @@ scheme: Muse
 # - Introduce in 5.0.1
 # ---------------------------------------------------------------
 font:
-  enable: true
+  enable: false
 
   # Uri of fonts host. E.g. //fonts.googleapis.com (Default)
   host:
@@ -212,8 +238,8 @@ font:
 # Social Links
 # Key is the link label showing to end users.
 # Value is the target link (E.g. GitHub: https://github.com/iissnan)
-#social:
-  #LinkLabel: Link
+social:
+  GitHub: https://github.com/sin90lzc
 
 
 # Social Links Icons
@@ -263,9 +289,9 @@ sidebar:
   #  - always  expand for all pages automatically
   #  - hide    expand only when click on the sidebar toggle icon.
   #  - remove  Totally remove sidebar including sidebar toggle.
-  display: post
+  #display: post
   #display: always
-  #display: hide
+  display: hide
   #display: remove
 
   # Sidebar offset from top menubar in pixels.
@@ -344,8 +370,8 @@ post_copyright:
 #   enabled: [true/false] - Replace with specific image
 #   image: url-of-image   - Images's url
 custom_logo:
-  enabled: false
-  image:
+  enabled: true
+  image: 
 
 
 # Code Highlight theme
@@ -379,8 +405,8 @@ han: false
 
 # Disqus
 disqus:
-  enable: false
-  shortname:
+  enable: true
+  shortname: sin90lzc
   count: true
   # hide comments (visitors need to click to load the comments)
   # count need to be false when hide is true
@@ -443,7 +469,7 @@ changyan:
 # user_id must NOT be null when admin_enable is true!
 # you can visit http://dev.duoshuo.com get duoshuo user id.
 duoshuo_info:
-  ua_enable: true
+  ua_enable: false
   admin_enable: false
   user_id: 0
   #admin_nickname: Author
@@ -550,7 +576,7 @@ algolia_search:
 
 # Local search
 local_search:
-  enable: false
+  enable: true
   # if auto, trigger search by changing input
   # if manual, trigger search by pressing enter key or search button
   trigger: auto
@@ -572,7 +598,7 @@ exturl: false
 use_motion: true
 
 # Fancybox
-fancybox: true
+fancybox: false
 
 # Progress bar in the top during page loading.
 pace: false

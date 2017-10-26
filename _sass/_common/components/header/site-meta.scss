@@ -4,6 +4,10 @@
 
   @include mobile() { text-align: center; }
 }
+.site-meta.custom-logo {
+    background-image: $backgroup-img;
+    background-size: cover;
+}
 
 .brand {
   position: relative;
