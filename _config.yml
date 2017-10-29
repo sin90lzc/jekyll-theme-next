@@ -69,13 +69,21 @@ defaults:
       category: "生活"
   -
     scope:
+      path: "_posts/awareness"
+    values:
+      category: "感悟"
+  -
+    scope:
       path: "_posts/life/2017-10-25-可爱天使.md"
     values:
       title: "可爱天使"
       date: "2017-10-26"
       tag: "宝贝"
-
-
+  -
+    scope:
+      path: "_posts/awareness/2017-10-27-传承.md"
+    values:
+      categories: "原创"
 
 
 
