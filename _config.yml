@@ -74,6 +74,11 @@ defaults:
       category: "感悟"
   -
     scope:
+      path: "_posts/technology"
+    values:
+      categories: "技术,原创"
+  -
+    scope:
       path: "_posts/life/2017-10-25-可爱天使.md"
     values:
       title: "可爱天使"
