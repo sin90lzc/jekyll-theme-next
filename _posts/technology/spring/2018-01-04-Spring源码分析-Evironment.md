@@ -56,58 +56,63 @@ AbstractEnvironment是Environment的抽象实现类，它实现了Environment的
 ### 实现profiles的管理
 
 在AbstractEnvironment实现中，使用了两个属性进行维护profiles，activeProfiles用于保存激活的profile集合，而defaultProfiles则用于保存默认的profile集合，两个属性使用的数据结构是`LinkedHashSet`,代码声明如下：
+~~~java
+private final Set<String> activeProfiles = new LinkedHashSet<String>();
 
-	private final Set<String> activeProfiles = new LinkedHashSet<String>();
-
-	private final Set<String> defaultProfiles = new LinkedHashSet<String>(getReservedDefaultProfiles());
+private final Set<String> defaultProfiles = new LinkedHashSet<String>(getReservedDefaultProfiles());
+~~~
 
 下面看看活跃profiles和默认profiles的核心获取逻辑：
 
-	protected Set<String> doGetActiveProfiles() {
-		synchronized (this.activeProfiles) {
-			if (this.activeProfiles.isEmpty()) {
-				String profiles = getProperty(ACTIVE_PROFILES_PROPERTY_NAME);
-				if (StringUtils.hasText(profiles)) {
-					setActiveProfiles(StringUtils.commaDelimitedListToStringArray(
-							StringUtils.trimAllWhitespace(profiles)));
-				}
+~~~java
+protected Set<String> doGetActiveProfiles() {
+	synchronized (this.activeProfiles) {
+		if (this.activeProfiles.isEmpty()) {
+			String profiles = getProperty(ACTIVE_PROFILES_PROPERTY_NAME);
+			if (StringUtils.hasText(profiles)) {
+				setActiveProfiles(StringUtils.commaDelimitedListToStringArray(
+						StringUtils.trimAllWhitespace(profiles)));
 			}
-			return this.activeProfiles;
 		}
+		return this.activeProfiles;
 	}
-	
-	protected Set<String> doGetDefaultProfiles() {
-		synchronized (this.defaultProfiles) {
-			if (this.defaultProfiles.equals(getReservedDefaultProfiles())) {
-				String profiles = getProperty(DEFAULT_PROFILES_PROPERTY_NAME);
-				if (StringUtils.hasText(profiles)) {
-					setDefaultProfiles(StringUtils.commaDelimitedListToStringArray(
-							StringUtils.trimAllWhitespace(profiles)));
-				}
+}
+
+protected Set<String> doGetDefaultProfiles() {
+	synchronized (this.defaultProfiles) {
+		if (this.defaultProfiles.equals(getReservedDefaultProfiles())) {
+			String profiles = getProperty(DEFAULT_PROFILES_PROPERTY_NAME);
+			if (StringUtils.hasText(profiles)) {
+				setDefaultProfiles(StringUtils.commaDelimitedListToStringArray(
+						StringUtils.trimAllWhitespace(profiles)));
 			}
-			return this.defaultProfiles;
 		}
+		return this.defaultProfiles;
 	}
+}
+~~~
 
 从上面代码中可以看出，**活跃profiles和默认profiles是分别通过系统属性spring.profiles.active,spring.profiles.default定义了。而且，这两个方法都是protected的，即可以由子类去扩展定义profiles的获取途径。**
 
 下面看看，spring是如何判断一个profile是否可用的：
 
-	protected boolean isProfileActive(String profile) {
-			validateProfile(profile);
-			Set<String> currentActiveProfiles = doGetActiveProfiles();
-			return (currentActiveProfiles.contains(profile) ||
-					(currentActiveProfiles.isEmpty() && doGetDefaultProfiles().contains(profile)));
-	}
+~~~java
+protected boolean isProfileActive(String profile) {
+		validateProfile(profile);
+		Set<String> currentActiveProfiles = doGetActiveProfiles();
+		return (currentActiveProfiles.contains(profile) ||
+				(currentActiveProfiles.isEmpty() && doGetDefaultProfiles().contains(profile)));
+}
+~~~
 
 上面代码逻辑说明，**优先从活跃profiles中去查找，只有当没有配置任何活跃的profiles时，才从默认的profiles中去查找**。
 
 ### 实现属性源的管理
 
 AbstractEnvironment通过`MutablePropertySources`进行属性源管理的。
-	
-	private final MutablePropertySources propertySources = new MutablePropertySources(this.logger);
-
+~~~java	
+private final MutablePropertySources propertySources = new MutablePropertySources(this.logger);
+~~~
 
 从其类图中可以看出，MutablePropertySources其实是一个Iteratable对象，如：
 
@@ -115,7 +120,9 @@ AbstractEnvironment通过`MutablePropertySources`进行属性源管理的。
 
 MutablePropertySources实现Iteratable<PropertySource<?>>是通过内部聚合了List<PropertySource<?>>来实现的，并支持PropertySource<?>的增删改查，**MutablePropertySources使用了组合设计模式**。
 
-	private final List<PropertySource<?>> propertySourceList = new CopyOnWriteArrayList<PropertySource<?>>();
+~~~java
+private final List<PropertySource<?>> propertySourceList = new CopyOnWriteArrayList<PropertySource<?>>();
+~~~
 
 `PropertySource<?>`抽象了一个属性源的所有行为。由于属性源是多种多样的，有来自Map数据结构，有来自Properties，甚至来自数据库都有可能，因此，Spring提供了多种多样的`PropertySource<?>`：
 
@@ -125,18 +132,20 @@ MutablePropertySources实现Iteratable<PropertySource<?>>是通过内部聚合�
 
 AbstractEnvironment暴露了一个protected接口，给子类进行属性源的配置：
 
-	protected void customizePropertySources(MutablePropertySources propertySources) {
-	}
-
+~~~java
+protected void customizePropertySources(MutablePropertySources propertySources) {
+}
+~~~
 
 
 ### 实现属性解析能力
 
 AbstractEnvironment通过组合一个`ConfigurablePropertyResolver`的实现类`PropertySourcesPropertyResolver`来提供属性解析的能力的，**这里也是用到了组合设计模式**。
 
-	private final ConfigurablePropertyResolver propertyResolver =
-			new PropertySourcesPropertyResolver(this.propertySources);
-
+~~~java
+private final ConfigurablePropertyResolver propertyResolver =
+		new PropertySourcesPropertyResolver(this.propertySources);
+~~~
 
 
 关于`PropertySourcesPropertyResolver`的源码分析请看TODO
@@ -146,31 +155,33 @@ AbstractEnvironment通过组合一个`ConfigurablePropertyResolver`的实现类`
 
 这个实现比较简单，就直接贴代码了：
 
-	@Override
-	public void merge(ConfigurableEnvironment parent) {
-		for (PropertySource<?> ps : parent.getPropertySources()) {
-			if (!this.propertySources.contains(ps.getName())) {
-				this.propertySources.addLast(ps);
-			}
+~~~java
+@Override
+public void merge(ConfigurableEnvironment parent) {
+	for (PropertySource<?> ps : parent.getPropertySources()) {
+		if (!this.propertySources.contains(ps.getName())) {
+			this.propertySources.addLast(ps);
 		}
-		String[] parentActiveProfiles = parent.getActiveProfiles();
-		if (!ObjectUtils.isEmpty(parentActiveProfiles)) {
-			synchronized (this.activeProfiles) {
-				for (String profile : parentActiveProfiles) {
-					this.activeProfiles.add(profile);
-				}
-			}
-		}
-		String[] parentDefaultProfiles = parent.getDefaultProfiles();
-		if (!ObjectUtils.isEmpty(parentDefaultProfiles)) {
-			synchronized (this.defaultProfiles) {
-				this.defaultProfiles.remove(RESERVED_DEFAULT_PROFILE_NAME);
-				for (String profile : parentDefaultProfiles) {
-					this.defaultProfiles.add(profile);
-				}
+	}
+	String[] parentActiveProfiles = parent.getActiveProfiles();
+	if (!ObjectUtils.isEmpty(parentActiveProfiles)) {
+		synchronized (this.activeProfiles) {
+			for (String profile : parentActiveProfiles) {
+				this.activeProfiles.add(profile);
 			}
 		}
 	}
+	String[] parentDefaultProfiles = parent.getDefaultProfiles();
+	if (!ObjectUtils.isEmpty(parentDefaultProfiles)) {
+		synchronized (this.defaultProfiles) {
+			this.defaultProfiles.remove(RESERVED_DEFAULT_PROFILE_NAME);
+			for (String profile : parentDefaultProfiles) {
+				this.defaultProfiles.add(profile);
+			}
+		}
+	}
+}
+~~~
 
 该实现逻辑：
 
