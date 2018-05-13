@@ -1,0 +1,310 @@
+@startuml
+'hide footbox
+title AbstractBeanFactory.doGetBean方法关键过程
+autonumber "<b>[#]"
+
+actor Client as client
+participant AbstractBeanFactory
+participant DefaultSingletonBeanRegistry
+participant FactoryBeanRegistrySupport
+participant AbstractAutowireCapableBeanFactory
+participant ConstructorResolver
+
+participant MergedBeanDefinitionPostProcessor
+participant SmartInstantiationAwareBeanPostProcessor
+participant BeanDefinitionValueResolver
+participant BeanPostProcessor
+
+
+== 获取已创建单例bean的过程 ==
+client -> AbstractBeanFactory:doGetBean
+activate AbstractBeanFactory
+
+AbstractBeanFactory -> DefaultSingletonBeanRegistry:getSingleton(beanName)
+activate DefaultSingletonBeanRegistry
+note left
+获取已经实例化，但有
+可能未完成依赖注入
+的Bean
+end note
+
+alt bean只完成实例化，还未完成依赖注入
+
+DefaultSingletonBeanRegistry->SmartInstantiationAwareBeanPostProcessor:getEarlyBeanReference(beanInstance,beanName)
+activate SmartInstantiationAwareBeanPostProcessor
+note right
+后处理器，返回一个
+EarlyReference Bean,
+例如返回一个代理后的bean
+end note
+
+SmartInstantiationAwareBeanPostProcessor->DefaultSingletonBeanRegistry
+deactivate SmartInstantiationAwareBeanPostProcessor
+end
+
+
+DefaultSingletonBeanRegistry->AbstractBeanFactory:bean
+deactivate DefaultSingletonBeanRegistry
+
+alt bean不为空，而且是FactoryBean
+
+AbstractBeanFactory->FactoryBeanRegistrySupport:getObjectFromFactoryBean
+activate FactoryBeanRegistrySupport
+note left
+从FactoryBean
+到Bean的转换过程
+end note
+
+FactoryBeanRegistrySupport->AbstractBeanFactory:bean
+deactivate FactoryBeanRegistrySupport
+	
+end
+
+AbstractBeanFactory->client:bean
+'deactivate AbstractBeanFactory
+
+== bean实例化的过程 ==
+
+AbstractBeanFactory->DefaultSingletonBeanRegistry:getSingleton(beanName,singletonFactory)
+activate DefaultSingletonBeanRegistry
+note left
+创建单例Bean入口
+end note
+
+DefaultSingletonBeanRegistry->AbstractAutowireCapableBeanFactory:createBean(beanName,RootBeanDefinition,args)
+activate AbstractAutowireCapableBeanFactory
+
+AbstractAutowireCapableBeanFactory->InstantiationAwareBeanPostProcessor:postProcessBeforeInstantiation(Class<?> beanClass, String beanName)
+activate InstantiationAwareBeanPostProcessor
+note right
+Bean实例化前
+的后处理器
+end note
+InstantiationAwareBeanPostProcessor->AbstractAutowireCapableBeanFactory
+deactivate InstantiationAwareBeanPostProcessor
+
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:doCreateBean(beanName,RootBeanDefinition,args)
+activate AbstractAutowireCapableBeanFactory
+note left
+创建单例Bean的
+核心入口，Bean
+的所有过程都在
+这里发生
+end note
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:createBeanInstance(beanName,RootBeanDefinition,args)
+activate AbstractAutowireCapableBeanFactory
+note right:Bean实例化入口
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:instantiateUsingFactoryMethod(beanName,RootBeanDefinition,args)
+activate AbstractAutowireCapableBeanFactory
+note left:使用工厂方法实例化Bean
+
+AbstractAutowireCapableBeanFactory->ConstructorResolver:instantiateUsingFactoryMethod(beanName,RootBeanDefinition,args)
+activate ConstructorResolver
+note right
+核心实例化过程由
+ConstructorResolver
+完成
+end note
+
+ConstructorResolver->BeanDefinitionValueResolver:resolveValueIfNecessary(Object argName, Object value)
+activate BeanDefinitionValueResolver
+note right
+解析BeanDefinition中对属性
+或方法参数的配置值，配置值可
+能是RuntimeBeanReference,
+或TypedStringValue等未被解
+析的值
+end note
+BeanDefinitionValueResolver->ConstructorResolver:resolvedValue
+deactivate BeanDefinitionValueResolver
+
+ConstructorResolver->AbstractAutowireCapableBeanFactory:BeanWrapper
+deactivate ConstructorResolver
+deactivate AbstractAutowireCapableBeanFactory
+
+
+AbstractAutowireCapableBeanFactory->SmartInstantiationAwareBeanPostProcessor:determineCandidateConstructors(beanClass,beanName)
+activate AbstractAutowireCapableBeanFactory
+activate SmartInstantiationAwareBeanPostProcessor
+SmartInstantiationAwareBeanPostProcessor->AbstractAutowireCapableBeanFactory
+deactivate AbstractAutowireCapableBeanFactory
+deactivate SmartInstantiationAwareBeanPostProcessor
+
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:autowireConstructor(beanName,RootBeanDefinition,Constructor<?>[] ctors,args)
+activate AbstractAutowireCapableBeanFactory
+note left
+使用构造函数
+方式实例化Bean
+end note
+
+AbstractAutowireCapableBeanFactory->ConstructorResolver:autowireConstructor(beanName,RootBeanDefinition,Constructor<?>[] ctors,args)
+activate ConstructorResolver
+note right
+核心实例化过程由
+ConstructorResolver
+完成
+end note
+
+ConstructorResolver->BeanDefinitionValueResolver:resolveValueIfNecessary(Object argName, Object value)
+activate BeanDefinitionValueResolver
+note right
+解析BeanDefinition中对属性
+或方法参数的配置值，配置值可
+能是RuntimeBeanReference,
+或TypedStringValue等未被解
+析的值
+end note
+BeanDefinitionValueResolver->ConstructorResolver:resolvedValue
+deactivate BeanDefinitionValueResolver
+
+ConstructorResolver->AbstractAutowireCapableBeanFactory:BeanWrapper
+deactivate ConstructorResolver
+deactivate AbstractAutowireCapableBeanFactory
+
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:instantiateBean(beanName,RootBeanDefinition)
+activate AbstractAutowireCapableBeanFactory
+note right:使用默认构造函数实例化Bean
+
+
+deactivate AbstractAutowireCapableBeanFactory
+
+
+deactivate AbstractAutowireCapableBeanFactory
+
+
+AbstractAutowireCapableBeanFactory->MergedBeanDefinitionPostProcessor:postProcessMergedBeanDefinition(RootBeanDefinition,beanType, beanName);
+activate AbstractAutowireCapableBeanFactory
+activate MergedBeanDefinitionPostProcessor
+note right
+一般用于对RootBeanDefinition的后处理
+典型的实现是对属性或方法参数中的@AutoWired
+/@Resource注解做预处理
+end note
+MergedBeanDefinitionPostProcessor->AbstractAutowireCapableBeanFactory
+deactivate AbstractAutowireCapableBeanFactory
+deactivate MergedBeanDefinitionPostProcessor
+
+AbstractAutowireCapableBeanFactory->DefaultSingletonBeanRegistry:addSingletonFactory(beanName,ObjectFactory)
+note left:注册EarlyReference Bean工厂
+DefaultSingletonBeanRegistry->AbstractAutowireCapableBeanFactory
+
+
+
+== bean依赖注入过程 ==
+
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:populateBean(beanName, RootBeanDefinition, BeanWrapper)
+note right:依赖注入的关键入口
+activate AbstractAutowireCapableBeanFactory
+
+AbstractAutowireCapableBeanFactory->InstantiationAwareBeanPostProcessor:postProcessAfterInstantiation(Object bean, String beanName)
+activate InstantiationAwareBeanPostProcessor
+note right
+对实例化后的Bean的后处理器
+end note
+InstantiationAwareBeanPostProcessor->AbstractAutowireCapableBeanFactory
+deactivate InstantiationAwareBeanPostProcessor
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:autowireByName()
+note right
+使用beanName完成
+自动装载解析
+end note
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:autowireByType()
+note right
+使用beanType完成
+自动装载解析
+end note
+
+AbstractAutowireCapableBeanFactory->InstantiationAwareBeanPostProcessor:postProcessPropertyValues(PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName)
+activate InstantiationAwareBeanPostProcessor
+note right
+对PropertyValue进行后处理的地方，
+典型的实现是对属性或方法参数中的@AutoWired
+/@Resource注解完成依赖注入
+end note
+
+InstantiationAwareBeanPostProcessor->AbstractAutowireCapableBeanFactory
+deactivate InstantiationAwareBeanPostProcessor
+
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:applyPropertyValues(String beanName, BeanDefinition mbd, BeanWrapper bw, PropertyValues pvs)
+activate AbstractAutowireCapableBeanFactory
+note left
+将PropertyValues注入到Bean的过程
+end note
+
+AbstractAutowireCapableBeanFactory->BeanDefinitionValueResolver:resolveValueIfNecessary(Object argName, Object value)
+activate BeanDefinitionValueResolver
+note right
+解析BeanDefinition中对属性
+或方法参数的配置值，配置值可
+能是RuntimeBeanReference,
+或TypedStringValue等未被解
+析的值
+end note
+BeanDefinitionValueResolver->AbstractAutowireCapableBeanFactory:resolvedValue
+deactivate BeanDefinitionValueResolver
+
+AbstractAutowireCapableBeanFactory->BeanWrapperImpl:setPropertyValues(PropertyValues pvs)
+activate BeanWrapperImpl
+note right:将PropertyValues注入到Bean
+BeanWrapperImpl->AbstractAutowireCapableBeanFactory
+deactivate BeanWrapperImpl
+
+
+deactivate AbstractAutowireCapableBeanFactory
+
+
+
+== bean初始化及销毁注册 ==
+
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:initializeBean(beanName, beanInstance, RootBeanDefinition)
+note right:bean初始化入口
+activate AbstractAutowireCapableBeanFactory
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:invokeAwareMethods()
+note right
+完成BeanNameAware,
+BeanClassLoaderAware,
+BeanFactoryAware
+三个Aware接口的注入
+end note
+
+AbstractAutowireCapableBeanFactory->BeanPostProcessor:postProcessBeforeInitialization()
+activate BeanPostProcessor
+note right:Bean初始化前的后处理
+BeanPostProcessor->AbstractAutowireCapableBeanFactory
+deactivate BeanPostProcessor
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:invokeInitMethods()
+note right
+调用Bean的初始化方法
+end note
+
+AbstractAutowireCapableBeanFactory->BeanPostProcessor:postProcessAfterInitialization()
+activate BeanPostProcessor
+note right:Bean初始化后的后处理
+BeanPostProcessor->AbstractAutowireCapableBeanFactory
+deactivate BeanPostProcessor
+deactivate AbstractAutowireCapableBeanFactory
+
+AbstractAutowireCapableBeanFactory->AbstractAutowireCapableBeanFactory:registerDisposableBeanIfNecessary(beanName, beanInstance, RootBeanDefinition)
+note right
+注册可销毁的Bean可销毁的Bean使用
+DisposableBeanAdapter进行适配，
+适配器在销毁过程中调用
+DestructionAwareBeanPostProcessor
+后处理器
+end note
+deactivate AbstractAutowireCapableBeanFactory
+
+
+
+@enduml
