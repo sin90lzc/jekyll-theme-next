@@ -1,0 +1,64 @@
+@startuml
+
+start
+:prepareRefresh();
+note right
+容器启动准备，如初始化容器状态，
+PropertySources的初始化，
+准备早期事件存储
+end note
+:obtainFreshBeanFactory();
+note right
+完成容器创建及BeanDefinition的加载过程
+end note
+:prepareBeanFactory(beanFactory);
+note right
+完成常规BeanFactory的配置
+end note
+:postProcessBeanFactory(beanFactory);
+note right
+完成非常规BeanFactory的配置，
+如特定环境的配置（比如web环境）
+end note
+:invokeBeanFactoryPostProcessors(beanFactory);
+note right
+回调BeanFactoryPostProcessor,
+包括BeanDefinitionRegistryPostProcessor
+end note
+:registerBeanPostProcessors(beanFactory);
+note right
+注册BeanPostProcessor
+end note
+
+:initMessageSource();
+note right
+初始化MessageSource
+end note
+:initApplicationEventMulticaster();
+note right
+初始化ApplicationEventMulticaster，
+实现类是SimpleApplicationEventMulticaster
+end note
+
+:onRefresh();
+:registerListeners();
+note right
+完成向ApplicationEventMulticaster
+注册ApplicaitonEventListener
+end note
+:finishBeanFactoryInitialization(beanFactory);
+note right
+完成其余单例Bean的实例化，
+如配置了`lazy=false`的
+BeanDefinition的实例化
+end note
+:finishRefresh();
+
+note right
+完成了LifecycleProcessor的初始化，
+启动实现了SmartLifecycle的Bean，
+发布容器启动完成事件ContextRefreshedEvent
+end note
+stop
+
+@enduml

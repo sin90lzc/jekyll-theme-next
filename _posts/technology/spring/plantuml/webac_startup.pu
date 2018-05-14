@@ -1,0 +1,64 @@
+@startuml
+title web环境容器创建过程
+autonumber "<b>[#]"
+
+actor web应用容器 as client
+participant ContextLoaderListener
+participant ContextLoader
+participant AbstractApplicationContext
+participant AbstractRefreshableWebApplicationContext
+
+
+client->ContextLoaderListener:contextInitialized(ServletContext)
+activate ContextLoaderListener
+
+ContextLoaderListener->ContextLoader:initWebApplicationContext(ServletContext)
+activate ContextLoader
+
+ContextLoader->ContextLoader:createWebApplicationContext(ServletContext)
+note left
+使用默认构造函数实例化
+WebApplicationContext,
+而到底使用哪个具体实现，由
+ServletContext的
+contextClass参数决定
+end note
+
+
+ContextLoader->ContextLoader:configureAndRefreshWebApplicationContext(ConfigurableWebApplicationContext,ServletContext)
+activate ContextLoader
+ContextLoader->AbstractRefreshableWebApplicationContext:setServletContext(ServletContext)
+activate AbstractRefreshableWebApplicationContext
+note left:把ServletContext设置到容器
+
+AbstractRefreshableWebApplicationContext->ContextLoader
+deactivate AbstractRefreshableWebApplicationContext
+
+ContextLoader->AbstractRefreshableWebApplicationContext:setConfigLocation()
+activate AbstractRefreshableWebApplicationContext
+note left
+配置BeanDefinition加载路径，
+由ServletContext的
+contextConfigLocation参数
+配置
+end note
+
+AbstractRefreshableWebApplicationContext->ContextLoader
+deactivate AbstractRefreshableWebApplicationContext
+
+ContextLoader->AbstractApplicationContext:refresh()
+activate AbstractApplicationContext
+note left:触发容器启动过程
+
+AbstractApplicationContext->ContextLoader
+deactivate AbstractApplicationContext
+deactivate ContextLoader
+
+ContextLoader->ContextLoaderListener
+deactivate ContextLoader
+
+ContextLoaderListener->client
+deactivate ContextLoaderListener
+
+
+@enduml
