@@ -1,0 +1,32 @@
+
+'plantuml有bug,生成的效果不理想，只能再对其做后处理了
+
+@startuml
+|processConfigBeanDefinitions()|
+start
+
+repeat
+:查找所有待处理
+ConfigurationBeanDefition;
+
+if (待处理的ConfigurationBeanDefition?) then (不存在)
+
+stop
+
+else (存在)
+|#AntiqueWhite|ConfigurationClassParser|
+:解析ConfigurationBeanDefition，
+并把解析后的中间结果封装成
+ConfigurationClass;
+
+|ConfigurationClassBeanDefinitionReader|
+:读取ConfigurationClass中的中间解析结果，
+生成供容器使用的BeanDefinition并注册到容器;
+endif
+
+
+repeat while (true)
+
+
+
+@enduml
