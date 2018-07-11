@@ -77,7 +77,7 @@
 
 从getSingleton方法中可以看到，bean的获取过程是先从singletonObjects中获取bean，若没有再从earlySingletonObjects中获取EarlyReference Bean，以实现Bean双向引用的。
 
-EarlyBeanReference注册应该发生在Bean实例化之后，正如时序图中**[18]**调用所示，发生的时刻正是在Bean实例化之后，但这里并不是简单地注册实例化后的Bean，而是一个`ObjectFactory`，这个`ObjectFactory`会进一步调用`SmartInstantiationAwareBeanPostProcessor.getEarlyBeanReference(beanInstance,beanName)`对原始Bean进行增强(调用**[3]**)，通过`ObjectFactory`增强的EarlyBeanReference会被注册到earlySingletonObjects中去。正如下面代码片段展示的一样：
+EarlyBeanReference注册应该发生在Bean实例化之后，正如时序图中**[30]**调用所示，发生的时刻正是在Bean实例化之后，但这里并不是简单地注册实例化后的Bean，而是一个`ObjectFactory`，这个`ObjectFactory`会进一步调用`SmartInstantiationAwareBeanPostProcessor.getEarlyBeanReference(beanInstance,beanName)`对原始Bean进行增强(调用**[3]**)，通过`ObjectFactory`增强的EarlyBeanReference会被注册到earlySingletonObjects中去。正如下面代码片段展示的一样：
 
 ```java
 	//[18]调用代码片段，注册EarlyBeanReference工厂类
@@ -222,7 +222,7 @@ autowiredByType的实现就稍微复杂一些了。它把需要进行依赖注�
 
 当具有多个相同工厂方法名称的时候，就需要确定使用哪一个工厂方法了。在Spring中会对每一个工厂方法参数类型匹配情况进行计分，按计分排序，从而获取最优的工厂方法。而到底Spring是如何计分的，可参考实现`org.springframework.beans.factory.support.ConstructorResolver.ArgumentsHolder.getTypeDifferenceWeight(Class<?>[])`实现，这里不再详述。
 
-构造函数的确定过程与工厂方法类似，但Spring为构造函数的确定提供了一个后处理器方法`SmartInstantiationAwareBeanPostProcessor.determineCandidateConstructors()`，让用户有机会自己去确定使用哪个构造函数作为候选构造函数。这个后处理器方法的调用时机如**[14]**调用所示，发生在autowireConstructor方法调用之前。
+构造函数的确定过程与工厂方法类似，但Spring为构造函数的确定提供了一个后处理器方法`SmartInstantiationAwareBeanPostProcessor.determineCandidateConstructors()`，让用户有机会自己去确定使用哪个构造函数作为候选构造函数。这个后处理器方法的调用时机如**[20]**调用所示，发生在autowireConstructor方法调用之前。
 
 `determineCandidateConstructors`方法的其中一个实现类是`AutowiredAnnotationBeanPostProcessor`，它把带有@Autowired,@Value,@Inject注解的构造函数作为候选构造函数，并优先使用带有@Required注解的构造函数。
 
@@ -232,7 +232,7 @@ Bean依赖注入关键过程入口在**[32]**调用方法`populateBean()`。依�
 
 1. **[33]**调用`InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation`，在这里可对实例化后的Bean进行增强，如创建代理对象。
 2. 根据autowire类型（byName或byType）调用对应的autowireByName()或autowireByType()方法。值得注意的是，这里并不是处理@Autowire/@Resource注解的地方，而是处理所有复杂对象类型的属性的依赖解析工作。并把解析后的对象放到BeanDefinateion的PropertyValue中去，在applyPropertyValues方法调用**[39]**中注入到属性中去。而关于autowireByName()或autowireByType()方法的实现在[自动装载](#autowire)中讨论过了，这里就不再讨论了。
-3. 接着回调`InstantiationAwareBeanPostProcessor:postProcessPropertyValues()`**[37]**后处理器，以增强PropertyValues。这些后处理器的典型实现是完成@Autowire/@Resource注解的依赖注入，实现细节请参考`AutowiredAnnotationBeanPostProcessor`。这里的实现与后处理器的命名好像存在着不一致的地方。估计Spring团队也是不得已而为之了。
+3. 接着回调`InstantiationAwareBeanPostProcessor:postProcessPropertyValues()`**[37]**后处理器，以增强PropertyValues。这些后处理器的典型实现是完成@Autowire/@Resource注解的依赖注入，实现细节请参考`AutowiredAnnotationBeanPostProcessor`。
 4. 最后调用applyPropertyValues方法**[39]**，将PropertyValues中的值注入到bean实例中去。但此时，可能有些未经过解析的PropertyValues是不能直接注入的（这些未经解析的PropertyValues可能是来自于Xml配置或其他配置过程），此时需要BeanDefinitionValueResolver对未解析的PropertyValue进行解析**[40]**再完成注入了。注入的过程是在`BeanWrapper.setPropertyValues()`方法**[42]**中完成的。
 
 ### Bean初始化与销毁注册
