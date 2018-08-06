@@ -46,7 +46,34 @@ public class AopTest {
 
 从上面的注释中也可以看出，要使用Spring AOP创建一个代理对象只需要2步：1. AOP的配置信息，包括需要代理的接口、目标对象和切面。AOP配置信息由AdvisedSupport进行管理。2. 使用AopProxyFactory抽象工厂创建AopProxy，由AopProxy负责创建代理对象（在这里AopProxyFactory使用的是抽象工厂设计模式，而AopProxy则是工厂方法设计模式）。
 
-由此可见，只要通过AdvisedSupport提供必要的代理配置信息，就能由DefaultAopProxyFactory为我们创建所需的代理对象了，这是多么简单的API使用啊。
+由此可见，只要通过AdvisedSupport提供必要的代理配置信息，就能由DefaultAopProxyFactory为我们创建所需的代理对象了，这是多么简单的API使用啊。其实这还个API还不是最简单的，Spring还提供了ProxyFactory来简化这个过程，ProxyFactory通过封装AdvisedSupport和DefaultAopProxyFactory来实现简化，下面用ProxyFactory来实现上面的示例：
+
+```java
+public class AopTest2 {
+	
+	public static void main(String[] args) {
+		// 1. AOP代理配置
+		ProxyFactory proxyFactory=new ProxyFactory();
+		proxyFactory.setInterfaces(AopInterface.class);// 1.1 配置需要代理的接口
+		proxyFactory.setTargetSource(new SingletonTargetSource(new Tim())); // 1.2 代理的目标对象，这里使用TargetSource去抽象目标对象
+		proxyFactory.addAdvisor(new DefaultPointcutAdvisor(Pointcut.TRUE, new MethodInterceptor() {
+			@Override
+			public Object invoke(MethodInvocation invocation) throws Throwable {
+				String method=invocation.getMethod().getName();
+				System.out.println(String.format("invoke method [%s] before!",method));
+				Object result=invocation.proceed();
+				System.out.println(String.format("invoke method [%s] after ,with result [%s]!",method,result));
+				return result;
+			}
+		})); // 1.3 1个或多个Advisor，Advisor由Pointcut和Advice组成，Pointcut定义了切入点，而Advice描述了切点功能
+		
+		// 2. 通过AopProxyFactory创建AopProxy
+		AopInterface proxy = (AopInterface)proxyFactory.getProxy();
+		proxy.name();
+		proxy.age();
+	}
+}
+```
 
 下面就从AdvisedSupport和DefaultAopProxyFactory为切入口，探索Spring AOP的奥秘吧！
 
