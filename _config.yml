@@ -79,6 +79,11 @@ defaults:
       categories: ["技术","原创"]
   -
     scope:
+      path: "_posts/shell"
+    values:
+      categories: ["shell"]
+  -
+    scope:
       path: "_posts/life/2017-10-25-可爱天使.md"
     values:
       title: "可爱天使"
@@ -88,7 +93,8 @@ defaults:
     scope:
       path: "_posts/awareness/2017-10-27-传承.md"
     values:
-      categories: "原创"
+      tags: ["感悟","原创"]
+
 
 
 
